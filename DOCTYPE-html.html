@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Show: Tiếp Sức Đổi Mới - Thử Thách Chuyên Sâu</title>
+    <style>
+        :root {
+            --bg-primary: #0b1120;
+            --bg-card: #151e32;
+            --baocap-color: #ef4444;
+            --doimoi-color: #10b981;
+            --bẫy-color: #f59e0b;
+            --gold-accent: #fbbf24;
+            --text-main: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            color: var(--gold-accent);
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-top: 2px;
+        }
+
+        .game-status {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 8px;
+        }
+
+        .status-box {
+            background: var(--bg-card);
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .status-box span {
+            color: var(--gold-accent);
+            font-size: 1.2rem;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        button.btn-check {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        /* 3 Cột */
+        .board {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            flex: 1;
+            margin-bottom: 12px;
+        }
+
+        .column {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid #334155;
+            min-height: 280px;
+        }
+
+        .column-header {
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .col-baocap .column-header {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid var(--baocap-color);
+        }
+
+        .col-doimoi .column-header {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border: 1px solid var(--doimoi-color);
+        }
+
+        .col-bay .column-header {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fde047;
+            border: 1px solid var(--bẫy-color);
+        }
+
+        .drop-zone {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 6px;
+            padding: 6px;
+            border: 2px dashed #334155;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .drop-zone.drag-over {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--gold-accent);
+        }
+
+        /* Kho thẻ */
+        .source-deck-container {
+            background: var(--bg-card);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .source-deck {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            min-height: 90px;
+        }
+
+        /* Thẻ bài */
+        .card {
+            background: #1e293b;
+            color: #f1f5f9;
+            padding: 7px 10px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: grab;
+            border: 1px solid #475569;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: transform 0.15s, background 0.2s;
+        }
+
+        .card:active { cursor: grabbing; }
+        .card.dragging { opacity: 0.4; }
+
+        .card.correct {
+            background: #065f46 !important;
+            border-color: #10b981 !important;
+        }
+
+        .card.wrong {
+            background: #991b1b !important;
+            border-color: #ef4444 !important;
+        }
+
+        @media (max-width: 900px) {
+            .board { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚡ Tiếp Sức Đổi Mới </h1>
+        <div class="subtitle">Phân loại 20 nội dung chắt lọc về đại hội VI và đại hội VII !</div>
+        <div class="game-status">
+            <div class="status-box">⏱️ Còn lại: <span id="timer">180</span>s</div>
+            <div class="status-box">⭐ Điểm số: <span id="score">0</span></div>
+        </div>
+        <div class="controls">
+            <button onclick="startGame()">▶️ Bắt Đầu (s)</button>
+            <button class="btn-check" onclick="checkAnswers()">✔️ Kiểm Tra Đáp Án</button>
+            <button onclick="resetGame()">🔄 Trộn Bài Mới</button>
+        </div>
+    </header>
+
+    <!-- 3 Cột Chứa Bài -->
+    <div class="board">
+        <div class="column col-baocap">
+            <div class="column-header">Trước ĐH VI (Bao Cấp)</div>
+            <div class="drop-zone" id="zone-baocap" data-type="baocap"></div>
+        </div>
+
+        <div class="column col-doimoi">
+            <div class="column-header">Sau ĐH VI (Đổi Mới)</div>
+            <div class="drop-zone" id="zone-doimoi" data-type="doimoi"></div>
+        </div>
+
+        <div class="column col-bay">
+            <div class="column-header">⚠️ không thuộc 2 đại hội VI và VII</div>
+            <div class="drop-zone" id="zone-bay" data-type="bay"></div>
+        </div>
+    </div>
+
+    <!-- Kho Thẻ -->
+    <div class="source-deck-container">
+        <div class="source-deck drop-zone" id="zone-source" data-type="source"></div>
+    </div>
+
+    <script>
+        // Bộ 20 câu hỏi về đại hội VI đại hội VII
+        const cardData = [
+            // Cột Bao cấp (6 câu)
+            { id: 1, text: "Chỉ số CPI tăng trên 300% - 700%/năm", type: "doimoi" },
+            { id: 2, text: "Nông dân không tha thiết với ruộng đất Hợp tác xã", type: "baocap" },
+            { id: 3, text: "Mô hình kinh tế thị trường tự do tư bản", type: "bay" }, // Bẫy
+            { id: 4, text: "Thừa nhận sự tồn tại của nền kinh tế 5 thành phần", type: "doimoi" },
+            { id: 5, text: "Xóa bỏ thu mua nông sản giá rẻ theo nghĩa vụ", type: "doimoi" },
+            { id: 6, text: "Xem Công nghiệp nặng là ưu tiên số 1 bằng mọi giá", type: "baocap" },
+            { id: 7, text: "Gia nhập Tổ chức Thương mại Thế giới (WTO)", type: "bay" }, // Bẫy lịch sử (WTO 2007)
+            { id: 8, text: "Chính sách Khoán 10 (Nghị quyết 10 năm 1988)", type: "doimoi" },
+            { id: 9, text: "Cơ chế quản lý 'Lời ăn lỗ nhà nước chịu'", type: "baocap" },
+            { id: 10, text: "Thừa nhận sản xuất hàng hóa & quy luật giá trị", type: "doimoi" },
+            { id: 11, text: "Mở rộng quyền tự chủ tài chính cho DN quốc doanh", type: "doimoi" },
+            { id: 12, text: "Đẩy mạnh số hóa & kinh tế tri thức quốc gia", type: "bay" }, // Bẫy thời đại
+            { id: 13, text: "Bán hàng theo tiêu chuẩn định lượng của Sổ gạo", type: "baocap" },
+            { id: 14, text: "Trở thành nước xuất khẩu gạo Top 2 thế giới năm 1989", type: "doimoi" },
+            { id: 15, text: "Cấm tư nhân mở cửa hàng kinh doanh thương mại", type: "baocap" },
+            { id: 16, text: "Áp dụng cơ chế Bao cấp toàn diện ngay từ 1945", type: "bay" }, // Bẫy mốc lịch sử
+            { id: 17, text: "Xóa bỏ tình trạng Bán buôn độc quyền của Nhà nước", type: "doimoi" },
+            { id: 18, text: "Bình đẳng giữa kinh tế Tư nhân & Kinh tế Nhà nước", type: "doimoi" },
+            { id: 19, text: "Thực hiện 'Đổi tiền năm 1985' gây lạm phát", type: "baocap" },
+            { id: 20, text: "Bình ổn tỷ giá VND cố định không thay đổi", type: "bay" } // Bẫy
+        ];
+
+        let timeLeft = 180;
+        let timerInterval = null;
+        let isGameRunning = false;
+
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function initCards() {
+            const sourceZone = document.getElementById('zone-source');
+            sourceZone.innerHTML = '';
+            document.getElementById('zone-baocap').innerHTML = '';
+            document.getElementById('zone-doimoi').innerHTML = '';
+            document.getElementById('zone-bay').innerHTML = '';
+
+            const shuffled = shuffleArray(cardData);
+
+            shuffled.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.draggable = true;
+                card.innerText = item.text;
+                card.dataset.id = item.id;
+                card.dataset.type = item.type;
+
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+
+                sourceZone.appendChild(card);
+            });
+
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+            });
+        }
+
+        let draggedCard = null;
+
+        function handleDragStart(e) {
+            draggedCard = this;
+            this.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', '');
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+            draggedCard = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave() {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            if (draggedCard) {
+                this.appendChild(draggedCard);
+            }
+        }
+
+        function startGame() {
+            if (isGameRunning) return;
+            isGameRunning = true;
+            timeLeft = 180;
+            document.getElementById('score').innerText = '0';
+            initCards();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    isGameRunning = false;
+                    alert("⏰ HẾT GIỜ! Kiểm tra xem đội bạn bẫy được bao nhiêu thẻ sai!");
+                    checkAnswers();
+                }
+            }, 1000);
+        }
+
+        function checkAnswers() {
+            clearInterval(timerInterval);
+            isGameRunning = false;
+
+            let score = 0;
+            const zones = ['zone-baocap', 'zone-doimoi', 'zone-bay'];
+
+            zones.forEach(zoneId => {
+                const zone = document.getElementById(zoneId);
+                const targetType = zone.dataset.type;
+                const cards = zone.querySelectorAll('.card');
+
+                cards.forEach(card => {
+                    if (card.dataset.type === targetType) {
+                        card.className = 'card correct';
+                        score += 15; // Mỗi câu đúng được 15d
+                    } else {
+                        card.className = 'card wrong';
+                        score -= 5;  // Xếp sai bị trừ 5d
+                    }
+                });
+            });
+
+            document.getElementById('score').innerText = Math.max(0, score);
+        }
+
+        function resetGame() {
+            clearInterval(timerInterval);
+            isGameRunning = false;
+            document.getElementById('timer').innerText = '180';
+            document.getElementById('score').innerText = '0';
+            initCards();
+        }
+
+        window.onload = initCards;
+    </script>
+</body>
+</html>
